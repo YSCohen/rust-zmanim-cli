@@ -1,0 +1,16 @@
+- [ ] nushell completions
+- [ ] config file schema - probably with `schemars`
+- [ ] shell completion for zman names
+- [ ] improve the `did you mean:` zman searcher
+- [ ] custom offset grammar (e.g. alos:18.5deg, tzeis:72min, tzeis:90minz)
+- [ ] release build automation (GH actions, probably)
+- [ ] short descriptions of zmanim
+    - generate from ident?
+    - would be used in:
+        - `zmanim list --long`
+        - table output
+- [ ] should JSON format be pretty or compact?
+- [ ] use anyhow context instead of format strings?
+- [ ] preset zman groups (e.g. --set essential|gra|all)?
+    - maybe don't get involved
+- [ ] timezone lookup by coords?

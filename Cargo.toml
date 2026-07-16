@@ -1,0 +1,30 @@
+[package]
+name = "rust-zmanim-cli"
+version = "0.1.0"
+edition = "2024"
+description = "A command-line tool for computing Jewish zmanim, powered by rust-zmanim"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/YSCohen/rust-zmanim-cli"
+keywords = ["zmanim", "jewish", "cli", "sunrise", "sunset"]
+categories = ["command-line-utilities", "date-and-time"]
+
+[[bin]]
+name = "zmanim"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1.0"
+clap = { version = "4.6", features = ["derive", "env", "wrap_help"] }
+clap_complete = "4.6"
+etcetera = "0.11"
+jiff = "0.2"
+rust-zmanim = "0.3"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = { version = "1.0", features = ["preserve_order"] }
+toml = "1.1"
+toml_edit = "0.25"
+
+[dev-dependencies]
+assert_cmd = "2.2"
+predicates = "3.1"
+tempfile = "3.27"
