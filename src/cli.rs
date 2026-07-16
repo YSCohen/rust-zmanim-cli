@@ -189,7 +189,20 @@ pub struct LocationNameArg {
 pub struct CompletionsArgs {
     /// Shell to generate completions for.
     #[arg(value_enum)]
-    pub shell: clap_complete::Shell,
+    pub shell: CompletionShell,
+}
+
+/// Shell to generate completions for. Wraps `clap_complete::Shell`, which has
+/// no Nushell variant, with the generator from `clap_complete_nushell`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
+pub enum CompletionShell {
+    Bash,
+    Elvish,
+    Fish,
+    Nushell,
+    #[value(name = "powershell")]
+    PowerShell,
+    Zsh,
 }
 
 // ---- Shared option enums (clap ValueEnum + serde Deserialize) ----

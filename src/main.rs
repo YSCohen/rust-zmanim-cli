@@ -11,7 +11,9 @@ mod zman_names;
 
 use anyhow::Result;
 use clap::{CommandFactory, Parser};
-use cli::{Cli, Command};
+use clap_complete::Shell;
+use clap_complete_nushell::Nushell;
+use cli::{Cli, Command, CompletionShell};
 
 fn main() {
     if let Err(e) = run() {
@@ -37,7 +39,19 @@ fn run() -> Result<()> {
         Some(Command::Completions(args)) => {
             let mut cmd = Cli::command();
             let name = cmd.get_name().to_string();
-            clap_complete::generate(args.shell, &mut cmd, name, &mut std::io::stdout());
+            let out = &mut std::io::stdout();
+            match args.shell {
+                CompletionShell::Bash => clap_complete::generate(Shell::Bash, &mut cmd, name, out),
+                CompletionShell::Elvish => {
+                    clap_complete::generate(Shell::Elvish, &mut cmd, name, out)
+                }
+                CompletionShell::Fish => clap_complete::generate(Shell::Fish, &mut cmd, name, out),
+                CompletionShell::Nushell => clap_complete::generate(Nushell, &mut cmd, name, out),
+                CompletionShell::PowerShell => {
+                    clap_complete::generate(Shell::PowerShell, &mut cmd, name, out)
+                }
+                CompletionShell::Zsh => clap_complete::generate(Shell::Zsh, &mut cmd, name, out),
+            }
             Ok(())
         }
 

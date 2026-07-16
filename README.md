@@ -71,10 +71,45 @@ timezone = "Asia/Jerusalem"
 use_elevation = "hanetz-shkia"  # optional: no | hanetz-shkia | all
 ```
 
-## Shell completions
+
+<details>
+<summary>Shell completions</summary>
+
+**bash** — add to `~/.bashrc`:
 
 ```sh
-zmanim completions bash > /path/to/completions/zmanim
+source <(zmanim completions bash)
 ```
 
-Supported shells: bash, zsh, fish, and others via `clap_complete`.
+**zsh** — add to `~/.zshrc`:
+
+```sh
+source <(zmanim completions zsh)
+```
+
+**fish** — completions are auto-loaded from this directory, so a one-time generation is enough:
+
+```sh
+zmanim completions fish > ~/.config/fish/completions/zmanim.fish
+```
+
+**nushell** — add to `config.nu`:
+
+```nu
+zmanim completions nushell | save --force $"($nu.cache-dir)/zmanim-completions.nu"
+source $"($nu.cache-dir)/zmanim-completions.nu"
+```
+
+**elvish** — add to `rc.elv`:
+
+```elv
+eval (zmanim completions elvish | slurp)
+```
+
+**PowerShell** — add to `$PROFILE`:
+
+```powershell
+zmanim completions powershell | Out-String | Invoke-Expression
+```
+
+</details>

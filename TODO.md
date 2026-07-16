@@ -1,4 +1,4 @@
-- [ ] nushell completions
+- [x] nushell completions
 - [ ] config file schema - probably with `schemars`
 - [ ] shell completion for zman names
 - [ ] improve the `did you mean:` zman searcher
