@@ -3,7 +3,7 @@
 - [ ] shell completion for zman names
 - [ ] improve the `did you mean:` zman searcher
 - [ ] custom offset grammar (e.g. alos:18.5deg, tzeis:72min, tzeis:90minz)
-- [ ] release build automation (GH actions, probably)
+- [x] release build automation (GH actions, probably)
 - [ ] short descriptions of zmanim
     - generate from ident?
     - would be used in:
