@@ -24,6 +24,38 @@ pub fn normalize(name: &str) -> String {
     name.trim().to_ascii_lowercase().replace('-', "_")
 }
 
+/// Accepts any string, but advertises the registry names as completion candidates.
+///
+/// Validation deliberately stays in [`resolve_zmanim`]: clap only consults
+/// `possible_values` for help rendering and completion generation, never as a
+/// validation gate, so hyphen/case normalization, the reserved `:` grammar, and
+/// the `did you mean:` suggester all keep working.
+#[derive(Debug, Clone)]
+pub struct ZmanNameParser;
+
+impl clap::builder::TypedValueParser for ZmanNameParser {
+    type Value = String;
+
+    fn parse_ref(
+        &self,
+        cmd: &clap::Command,
+        arg: Option<&clap::Arg>,
+        value: &std::ffi::OsStr,
+    ) -> Result<Self::Value, clap::Error> {
+        clap::builder::StringValueParser::new().parse_ref(cmd, arg, value)
+    }
+
+    fn possible_values(
+        &self,
+    ) -> Option<Box<dyn Iterator<Item = clap::builder::PossibleValue> + '_>> {
+        Some(Box::new(
+            ALL_ZMANIM
+                .iter()
+                .map(|e| clap::builder::PossibleValue::new(e.name)),
+        ))
+    }
+}
+
 /// Resolves the requested zman names (or the config/default set when none were
 /// given) into registry entries, deduplicating while preserving order.
 pub fn resolve_zmanim(requested: &[String], config: &Config) -> Result<Vec<&'static ZmanEntry>> {
@@ -148,6 +180,35 @@ mod tests {
         };
         let got = resolve_zmanim(&[], &cfg).unwrap();
         assert_eq!(got.len(), 2);
+    }
+
+    #[test]
+    fn parser_advertises_every_registry_name() {
+        use clap::builder::TypedValueParser;
+        let values: Vec<_> = ZmanNameParser
+            .possible_values()
+            .expect("parser must advertise values")
+            .map(|v| v.get_name().to_string())
+            .collect();
+        assert_eq!(values.len(), ALL_ZMANIM.len());
+        assert!(values.iter().any(|v| v == "shkia"));
+    }
+
+    /// The whole point of the custom parser: clap must *not* reject unknown
+    /// values, so `resolve_zmanim` keeps producing the "did you mean" error and
+    /// hyphenated forms keep working.
+    #[test]
+    fn parser_does_not_reject_unknown_values() {
+        use clap::Parser;
+        let cli = crate::cli::Cli::try_parse_from(["zmanim", "bogus", "sof-zman-shema-gra"])
+            .expect("clap must accept arbitrary zman strings");
+        assert_eq!(cli.compute.zmanim, ["bogus", "sof-zman-shema-gra"]);
+    }
+
+    #[test]
+    fn cli_definition_is_valid() {
+        use clap::CommandFactory;
+        crate::cli::Cli::command().debug_assert();
     }
 
     #[test]

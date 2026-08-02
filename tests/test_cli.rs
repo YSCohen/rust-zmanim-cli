@@ -267,6 +267,41 @@ fn lat_lon_conflicts_with_location() {
         .code(2); // clap usage error
 }
 
+/// Shells whose clap_complete generator emits possible values for *positional*
+/// args. fish/elvish/powershell only do so for named options, so zman names
+/// cannot appear in their scripts.
+const COMPLETING_SHELLS: [&str; 3] = ["bash", "zsh", "nushell"];
+
+#[test]
+fn completions_include_zman_names() {
+    // A name that appears nowhere in the help text or the ValueEnum variants,
+    // so a hit can only have come from the zman possible-values list.
+    let zman = "tzeis_geonim_7_083_degrees";
+    for shell in COMPLETING_SHELLS {
+        let tmp = TempDir::new().unwrap();
+        zmanim(&tmp)
+            .args(["completions", shell])
+            .assert()
+            .success()
+            .stdout(predicate::str::contains(zman));
+    }
+}
+
+/// The 174 names must not leak into `--help`, which is what `hide_possible_values`
+/// buys us; the completion test above guards the other side of that tradeoff.
+#[test]
+fn help_omits_zman_possible_values() {
+    let zman = "tzeis_geonim_7_083_degrees";
+    for args in [vec!["--help"], vec!["list", "--help"]] {
+        let tmp = TempDir::new().unwrap();
+        zmanim(&tmp)
+            .args(&args)
+            .assert()
+            .success()
+            .stdout(predicate::str::contains(zman).not());
+    }
+}
+
 /// Ensures the hidden `--config` override path is honored (used by all tests).
 #[test]
 fn config_override_is_used() {

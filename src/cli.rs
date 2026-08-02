@@ -1,6 +1,7 @@
 //! Command-line interface definition (clap) and the option enums shared
 //! between the CLI, the config file, and output rendering.
 
+use crate::zman_names::ZmanNameParser;
 use clap::{Args, Parser, Subcommand, ValueEnum};
 use rust_zmanim::prelude::UseElevation;
 use serde::Deserialize;
@@ -65,7 +66,11 @@ pub enum Command {
 pub struct ComputeArgs {
     /// Zmanim to compute, by name (see `zmanim list`). Hyphens and underscores
     /// are interchangeable. If omitted, a default set from config is used.
-    #[arg(value_name = "ZMAN")]
+    #[arg(
+        value_name = "ZMAN",
+        value_parser = ZmanNameParser,
+        hide_possible_values = true
+    )]
     pub zmanim: Vec<String>,
 
     /// Saved location name (see `zmanim locations`).
@@ -129,7 +134,11 @@ pub struct ComputeArgs {
 #[derive(Debug, Args)]
 pub struct ListArgs {
     /// Only show names containing this substring.
-    #[arg(value_name = "FILTER")]
+    #[arg(
+        value_name = "FILTER",
+        value_parser = ZmanNameParser,
+        hide_possible_values = true
+    )]
     pub filter: Option<String>,
 
     /// Only show zmanim of this kind.

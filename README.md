@@ -75,38 +75,43 @@ use_elevation = "hanetz-shkia"  # optional: no | hanetz-shkia | all
 <details>
 <summary>Shell completions</summary>
 
-**bash** — add to `~/.bashrc`:
+Add the following to the appropriate `...rc` or config files per shell.
+
+Completions for bash, zsh & nushell also complete *zman* names, but `clap_complete`'s fish, elvish, and powershell generators don't emit possible values for positional args, so those would need a more complicated setup for *zman* name completions which I didn't want to add (for now at least).
+
+**bash**:
 
 ```sh
 source <(zmanim completions bash)
 ```
 
-**zsh** — add to `~/.zshrc`:
+**zsh**:
 
 ```sh
 source <(zmanim completions zsh)
 ```
 
-**fish** — completions are auto-loaded from this directory, so a one-time generation is enough:
+**fish**:
 
 ```sh
 zmanim completions fish > ~/.config/fish/completions/zmanim.fish
 ```
 
-**nushell** — add to `config.nu`:
+**nushell**:  
+(note that this will actually `source` the completions before generating it if the following lines are in the same file)
 
 ```nu
 zmanim completions nushell | save --force $"($nu.cache-dir)/zmanim-completions.nu"
 source $"($nu.cache-dir)/zmanim-completions.nu"
 ```
 
-**elvish** — add to `rc.elv`:
+**elvish**:
 
 ```elv
 eval (zmanim completions elvish | slurp)
 ```
 
-**PowerShell** — add to `$PROFILE`:
+**PowerShell**:
 
 ```powershell
 zmanim completions powershell | Out-String | Invoke-Expression

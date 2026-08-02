@@ -1,6 +1,6 @@
 - [x] nushell completions
-- [ ] config file schema - probably with `schemars`
-- [ ] shell completion for zman names
+- [x] config file schema - probably with `schemars` (generation code absent for now)
+- [x] shell completion for zman names (bash/zsh/nushell only)
 - [ ] improve the `did you mean:` zman searcher
 - [ ] custom offset grammar (e.g. alos:18.5deg, tzeis:72min, tzeis:90minz)
 - [x] release build automation (GH actions, probably)
