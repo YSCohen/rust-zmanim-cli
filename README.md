@@ -96,6 +96,202 @@ one of them in any format.
 Missing zmanim — such as a *hanetz* that never happens above the Arctic Circle —
 render as `-` in table, an empty field in CSV, and `null` in JSON.
 
+## Command reference
+
+<details>
+<summary><code>zmanim --help</code></summary>
+
+```console
+$ zmanim --help
+A command-line tool for computing Jewish zmanim, powered by rust-zmanim
+
+Usage: zmanim [OPTIONS] [ZMAN]... [COMMAND]
+
+Commands:
+  list         List available zman names (optionally filtered by a substring)
+  locations    Manage saved locations
+  completions  Generate a shell completion script
+  help         Print this message or the help of the given subcommand(s)
+
+Arguments:
+  [ZMAN]...
+          Zmanim to compute, by name (see `zmanim list`). Hyphens and
+          underscores are interchangeable. If omitted, a default set from config
+          is used
+
+Options:
+  -L, --location <NAME>
+          Saved location name (see `zmanim locations`)
+
+          [env: ZMANIM_LOCATION=]
+
+      --lat <LAT>
+          Latitude in decimal degrees (requires --lon)
+
+      --lon <LON>
+          Longitude in decimal degrees (requires --lat)
+
+      --elevation <METERS>
+          Elevation in meters (default 0)
+
+      --tz <TZ>
+          IANA timezone (e.g. Asia/Jerusalem). Defaults to the location's saved
+          timezone, or the system timezone for raw coordinates
+
+          [env: ZMANIM_TZ=]
+
+      --date <DATE>
+          Date, `today`, `tomorrow`, or an inclusive range `START..END`
+
+      --days <N>
+          Number of consecutive days starting from --date (or today). Cannot be
+          combined with a `START..END` range
+
+      --use-elevation <MODE>
+          Elevation policy for the calculations
+
+          Possible values:
+          - no:           Never use elevation
+          - hanetz-shkia: Use elevation only for sunrise/sunset
+          - all:          Use elevation for all zmanim
+
+          [env: ZMANIM_USE_ELEVATION=]
+
+      --format <FORMAT>
+          Output format
+
+          Possible values:
+          - table: Aligned text table (or a vertical list for a single date)
+          - csv:   Comma-separated values
+          - json:  JSON array of per-date objects
+
+          [env: ZMANIM_FORMAT=]
+
+      --precision <PRECISION>
+          Display precision for human-readable times/durations
+
+          Possible values:
+          - m:  Minutes
+          - s:  Seconds
+          - ms: Milliseconds
+
+          [env: ZMANIM_PRECISION=]
+
+      --round <ROUND>
+          Rounding mode for human-readable times/durations
+
+          Possible values:
+          - nearest: Round to the nearest unit
+          - down:    Round toward earlier times (floor)
+          - up:      Round toward later times (ceil)
+
+          [env: ZMANIM_ROUND=]
+
+      --time-style <STYLE>
+          Time rendering: `auto` (human for table/csv, ISO for json), or force
+          `human`/`iso` in any format
+
+          Possible values:
+          - auto:  Human clock times for table/csv, full-precision ISO for json
+          - human: Human-readable clock times/durations (honors precision and
+            round)
+          - iso:   Full-precision ISO 8601 (RFC-3339 times, `PT..` durations)
+
+          [env: ZMANIM_TIME_STYLE=]
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+EXAMPLES:
+  # Compute zmanim for raw coordinates, today
+  zmanim shkia tzeis_72_minutes --lat 31.778 --lon 35.235 --tz Asia/Jerusalem
+
+  # Use a saved location and a date range
+  zmanim sof_zman_shema_gra shkia --location home --date 2026-07-14..2026-07-20
+
+  # Default zman set (from config), as JSON, next 7 days
+  zmanim --location home --days 7 --format json
+
+  # Discover zman names
+  zmanim list geonim
+
+  # Save a location
+  zmanim locations add home --lat 31.778 --lon 35.235 --tz Asia/Jerusalem
+```
+
+</details>
+
+<details>
+<summary><code>zmanim list --help</code></summary>
+
+```console
+$ zmanim list --help
+List available zman names (optionally filtered by a substring)
+
+Usage: zmanim list [OPTIONS] [FILTER]
+
+Arguments:
+  [FILTER]
+          Only show names containing this substring
+
+Options:
+      --kind <KIND>
+          Only show zmanim of this kind
+
+          Possible values:
+          - time:     Instant-in-time zmanim
+          - duration: Duration zmanim (*shaah zmanis*)
+
+  -h, --help
+          Print help (see a summary with '-h')
+```
+
+</details>
+
+<details>
+<summary><code>zmanim locations --help</code></summary>
+
+```console
+$ zmanim locations --help
+Manage saved locations
+
+Usage: zmanim locations [COMMAND]
+
+Commands:
+  list         List saved locations (the default when no action is given)
+  add          Add or update a saved location
+  remove       Remove a saved location
+  set-default  Set the default location
+  help         Print this message or the help of the given subcommand(s)
+
+Options:
+  -h, --help  Print help
+```
+
+</details>
+
+<details>
+<summary><code>zmanim completions --help</code></summary>
+
+```console
+$ zmanim completions --help
+Generate a shell completion script
+
+Usage: zmanim completions <SHELL>
+
+Arguments:
+  <SHELL>  Shell to generate completions for [possible values: bash, elvish,
+           fish, nushell, powershell, zsh]
+
+Options:
+  -h, --help  Print help
+```
+
+</details>
+
 ## Configuration
 
 Config lives at `~/.config/zmanim/config.toml`. Settings resolve in the order
@@ -190,3 +386,14 @@ zmanim completions powershell | Out-String | Invoke-Expression
 ```
 
 </details>
+
+## A note on AI assistance
+
+**Almost all of this CLI's code was written by Claude Code.** I wrote the
+specification and made the design calls. I also reviewed, tested,
+and corrected the result. However, as the code itself was mostly generated,
+there may be some of the odd kind of mistakes or code style which only LLMs
+make. Bear this in mind if you want to contribute, or just read the code.
+
+Of course, I would be happy to field any bug reports, feature requests, or even
+grumpy complaints. Thanks in advance!
