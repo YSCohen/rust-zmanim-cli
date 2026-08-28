@@ -4,6 +4,7 @@ mod cli;
 mod commands;
 mod compute;
 mod config;
+mod custom_zman;
 mod dates;
 mod output;
 mod resolve;

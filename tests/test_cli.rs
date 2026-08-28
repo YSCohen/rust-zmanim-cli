@@ -99,6 +99,155 @@ fn json_timestamp_matches_library() {
     assert_eq!(cli_shkia, expected_str);
 }
 
+/// Each custom spec must reproduce the built-in zman it mirrors.
+#[test]
+fn custom_offsets_match_their_builtin_equivalents() {
+    let pairs = [
+        ("tzeis:72min", "tzeis_72_minutes"),
+        ("tzeis:90minz", "tzeis_90_minutes_zmanis"),
+        // Duration-valued base.
+        ("shaah_zmanis_mga:72min", "shaah_zmanis_mga_72_minutes"),
+        (
+            "sof_zman_shema_mga:16.1deg",
+            "sof_zman_shema_mga_16_1_degrees",
+        ),
+        ("plag_mga:90minz", "plag_mga_90_minutes_zmanis"),
+    ];
+
+    for (custom, builtin) in pairs {
+        let tmp = TempDir::new().unwrap();
+        let run = |name: &str| {
+            let out = zmanim(&tmp)
+                .args([name])
+                .args(JLM)
+                .args(["--date", "2026-07-14", "--format", "json"])
+                .assert()
+                .success()
+                .get_output()
+                .stdout
+                .clone();
+            let text = String::from_utf8(out).unwrap();
+            let parsed: serde_json::Value = serde_json::from_str(&text).unwrap();
+            parsed[0]["zmanim"][name].as_str().unwrap().to_string()
+        };
+        assert_eq!(run(custom), run(builtin), "{custom} != {builtin}");
+    }
+}
+
+/// A degree value with no built-in equivalent, cross-checked against the
+/// library directly.
+#[test]
+fn custom_degrees_match_the_library() {
+    use jiff::{civil, tz::TimeZone};
+    use rust_zmanim::prelude::*;
+
+    let tmp = TempDir::new().unwrap();
+    let out = zmanim(&tmp)
+        .args(["alos:18.5deg"])
+        .args(JLM)
+        .args(["--date", "2026-07-14", "--format", "json"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let text = String::from_utf8(out).unwrap();
+    let parsed: serde_json::Value = serde_json::from_str(&text).unwrap();
+    let cli_alos = parsed[0]["zmanim"]["alos:18.5deg"].as_str().unwrap();
+
+    let geo = GeoLocation::new(
+        31.778,
+        35.235,
+        0.0,
+        TimeZone::get("Asia/Jerusalem").unwrap(),
+    )
+    .unwrap();
+    let czc = ComplexZmanimCalendar::new(geo, civil::date(2026, 7, 14), UseElevation::No);
+    let expected = czc.alos(&ZmanOffset::Degrees(18.5)).unwrap();
+
+    assert_eq!(
+        cli_alos,
+        expected.strftime("%Y-%m-%dT%H:%M:%S%.f%:z").to_string()
+    );
+}
+
+/// A negative offset flips the direction: `alos:-72min` is 72 minutes *after*
+/// sunrise, and `alos:-5deg` is the sun 5 degrees *above* the horizon (so also
+/// after sunrise).
+#[test]
+fn negative_custom_offsets_flip_direction() {
+    use jiff::{SignedDuration, Timestamp};
+
+    let tmp = TempDir::new().unwrap();
+    let out = zmanim(&tmp)
+        .args([
+            "hanetz",
+            "alos:-72min",
+            "alos:-5deg",
+            "shkia",
+            "tzeis:-72min",
+        ])
+        .args(JLM)
+        .args(["--date", "2026-07-14", "--format", "json"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let text = String::from_utf8(out).unwrap();
+    let parsed: serde_json::Value = serde_json::from_str(&text).unwrap();
+    let at =
+        |name: &str| -> Timestamp { parsed[0]["zmanim"][name].as_str().unwrap().parse().unwrap() };
+
+    assert_eq!(
+        at("alos:-72min"),
+        at("hanetz") + SignedDuration::from_mins(72)
+    );
+    assert_eq!(
+        at("tzeis:-72min"),
+        at("shkia") - SignedDuration::from_mins(72)
+    );
+    assert!(at("alos:-5deg") > at("hanetz"));
+    assert!(at("alos:-5deg") < at("shkia"));
+}
+
+#[test]
+fn custom_spec_is_the_csv_header() {
+    let tmp = TempDir::new().unwrap();
+    let out = zmanim(&tmp)
+        .args(["alos:18.5deg", "shkia"])
+        .args(JLM)
+        .args(["--date", "2026-07-14", "--days", "2", "--format", "csv"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let text = String::from_utf8(out).unwrap();
+    assert_eq!(text.lines().next().unwrap(), "date,alos:18.5deg,shkia");
+}
+
+#[test]
+fn bad_custom_spec_errors() {
+    let tmp = TempDir::new().unwrap();
+    zmanim(&tmp)
+        .args(["alos:18.5xyz"])
+        .args(JLM)
+        .assert()
+        .failure()
+        .code(1)
+        .stderr(predicate::str::contains("unrecognized offset"));
+
+    let tmp = TempDir::new().unwrap();
+    zmanim(&tmp)
+        .args(["bogus:72min"])
+        .args(JLM)
+        .assert()
+        .failure()
+        .code(1)
+        .stderr(predicate::str::contains("unknown custom zman base"));
+}
+
 #[test]
 fn list_contains_known_zman() {
     let tmp = TempDir::new().unwrap();

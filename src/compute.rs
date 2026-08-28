@@ -1,8 +1,9 @@
 //! Runs the actual zman computation over the resolved dates × zmanim.
 
 use crate::resolve::ResolvedSettings;
+use crate::zman_names::Zman;
 use jiff::civil::Date;
-use rust_zmanim::complex_zmanim_calendar::{ZmanEntry, ZmanValue};
+use rust_zmanim::complex_zmanim_calendar::ZmanValue;
 use rust_zmanim::prelude::ComplexZmanimCalendar;
 
 /// A computed grid: one row per date, one column per requested zman.
@@ -11,7 +12,7 @@ pub struct Grid {
     /// The dates, in order (row order).
     pub dates: Vec<Date>,
     /// The zman entries, in order (column order).
-    pub entries: Vec<&'static ZmanEntry>,
+    pub entries: Vec<Zman>,
     /// `rows[date_index][entry_index]`. `None` when the zman does not occur.
     pub rows: Vec<Vec<Option<ZmanValue>>>,
 }
@@ -33,7 +34,7 @@ pub fn compute(settings: &ResolvedSettings) -> Grid {
             settings
                 .entries
                 .iter()
-                .map(|entry| (entry.compute)(&czc))
+                .map(|entry| entry.compute(&czc))
                 .collect()
         })
         .collect();

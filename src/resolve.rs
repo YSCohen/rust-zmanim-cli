@@ -7,10 +7,10 @@
 
 use crate::cli::{ComputeArgs, Format, Precision, Round, TimeStyle};
 use crate::config::Config;
+use crate::zman_names::Zman;
 use crate::{dates, zman_names};
 use anyhow::{Context, Result, bail};
 use jiff::{civil::Date, tz::TimeZone};
-use rust_zmanim::complex_zmanim_calendar::ZmanEntry;
 use rust_zmanim::prelude::{GeoLocation, UseElevation};
 
 /// Fully resolved settings for a compute run.
@@ -23,7 +23,7 @@ pub struct ResolvedSettings {
     /// The dates to compute, in order (non-empty).
     pub dates: Vec<Date>,
     /// The zmanim to compute, in order (deduplicated).
-    pub entries: Vec<&'static ZmanEntry>,
+    pub entries: Vec<Zman>,
     /// Output format.
     pub format: Format,
     /// Display precision.

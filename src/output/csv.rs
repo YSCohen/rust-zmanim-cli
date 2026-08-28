@@ -16,7 +16,7 @@ pub fn render(grid: &Grid, settings: &ResolvedSettings) -> String {
     out.push_str("date");
     for e in &grid.entries {
         out.push(',');
-        out.push_str(e.name);
+        out.push_str(&e.name);
     }
     out.push('\n');
 

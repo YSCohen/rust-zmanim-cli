@@ -45,7 +45,7 @@ fn render_multi(grid: &Grid, settings: &ResolvedSettings, style: RenderStyle) ->
     let mut header: Vec<String> = Vec::with_capacity(grid.entries.len() + 1);
     header.push("date".to_string());
     for e in &grid.entries {
-        header.push(e.name.to_string());
+        header.push(e.name.clone());
     }
 
     let mut body: Vec<Vec<String>> = Vec::with_capacity(grid.dates.len());

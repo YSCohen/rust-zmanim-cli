@@ -23,7 +23,7 @@ pub fn render(grid: &Grid, settings: &ResolvedSettings) -> String {
                     Value::String(value::render(v, style, settings.precision, settings.round))
                 }
             };
-            zmanim.insert(entry.name.to_string(), cell);
+            zmanim.insert(entry.name.clone(), cell);
         }
         days.push(json!({
             "date": date.to_string(),

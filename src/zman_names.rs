@@ -1,12 +1,14 @@
-//! Resolving user-supplied zman names to registry entries.
+//! Resolving user-supplied zman names to something computable.
 //!
 //! Names are matched against [`ComplexZmanimCalendar`](rust_zmanim::prelude::ComplexZmanimCalendar)
-//! method names. Hyphens are accepted as underscores; a `:` is reserved for a
-//! future custom-offset grammar and rejected for now.
+//! method names. Hyphens are accepted as underscores; a name containing a `:`
+//! is a custom offset spec (see [`crate::custom_zman`]).
 
 use crate::config::Config;
-use anyhow::{Result, anyhow, bail};
-use rust_zmanim::complex_zmanim_calendar::{ALL_ZMANIM, ZmanEntry, find_zman};
+use crate::custom_zman::{self, CustomZman};
+use anyhow::{Result, anyhow};
+use rust_zmanim::complex_zmanim_calendar::{ALL_ZMANIM, ZmanEntry, ZmanValue, find_zman};
+use rust_zmanim::prelude::ComplexZmanimCalendar;
 
 /// Built-in default zman set, used when neither the command line nor the config
 /// specifies any zmanim.
@@ -22,6 +24,15 @@ pub const DEFAULT_ZMANIM: &[&str] = &[
 /// Normalizes a user-supplied name to the canonical method-name form.
 pub fn normalize(name: &str) -> String {
     name.trim().to_ascii_lowercase().replace('-', "_")
+}
+
+/// Normalizes a custom offset spec. Only the base half gets the usual
+/// hyphen-to-underscore treatment: in the offset half a `-` is a minus sign.
+fn normalize_spec(spec: &str) -> String {
+    match spec.trim().split_once(':') {
+        Some((base, offset)) => format!("{}:{}", normalize(base), offset.to_ascii_lowercase()),
+        None => normalize(spec),
+    }
 }
 
 /// Accepts any string, but advertises the registry names as completion candidates.
@@ -56,9 +67,35 @@ impl clap::builder::TypedValueParser for ZmanNameParser {
     }
 }
 
+/// One resolved zman: the label to print, plus how to compute it.
+#[derive(Debug, Clone)]
+pub struct Zman {
+    /// The canonical name, used as the column header / JSON key.
+    pub name: String,
+    /// Where the value comes from.
+    pub source: ZmanSource,
+}
+
+/// A registry entry, or a custom offset spec.
+#[derive(Debug, Clone)]
+pub enum ZmanSource {
+    Builtin(&'static ZmanEntry),
+    Custom(CustomZman),
+}
+
+impl Zman {
+    /// Computes the zman, returning [`None`] when it does not occur.
+    pub fn compute(&self, czc: &ComplexZmanimCalendar) -> Option<ZmanValue> {
+        match &self.source {
+            ZmanSource::Builtin(entry) => (entry.compute)(czc),
+            ZmanSource::Custom(custom) => custom.compute(czc),
+        }
+    }
+}
+
 /// Resolves the requested zman names (or the config/default set when none were
-/// given) into registry entries, deduplicating while preserving order.
-pub fn resolve_zmanim(requested: &[String], config: &Config) -> Result<Vec<&'static ZmanEntry>> {
+/// given), deduplicating while preserving order.
+pub fn resolve_zmanim(requested: &[String], config: &Config) -> Result<Vec<Zman>> {
     let names: Vec<String> = if !requested.is_empty() {
         requested.to_vec()
     } else if let Some(z) = &config.zmanim {
@@ -70,14 +107,22 @@ pub fn resolve_zmanim(requested: &[String], config: &Config) -> Result<Vec<&'sta
     let mut out = Vec::with_capacity(names.len());
     let mut seen = std::collections::HashSet::new();
     for raw in &names {
-        if raw.contains(':') {
-            // coming soon...
-            bail!("custom offsets (e.g. 'alos:18.5deg') are not supported yet: '{raw}'");
-        }
-        let norm = normalize(raw);
-        let entry = find_zman(&norm).ok_or_else(|| unknown_zman_error(raw, &norm))?;
-        if seen.insert(entry.name) {
-            out.push(entry);
+        let zman = if raw.contains(':') {
+            let norm = normalize_spec(raw);
+            Zman {
+                source: ZmanSource::Custom(custom_zman::parse(&norm)?),
+                name: norm,
+            }
+        } else {
+            let norm = normalize(raw);
+            let entry = find_zman(&norm).ok_or_else(|| unknown_zman_error(raw, &norm))?;
+            Zman {
+                name: entry.name.to_string(),
+                source: ZmanSource::Builtin(entry),
+            }
+        };
+        if seen.insert(zman.name.clone()) {
+            out.push(zman);
         }
     }
     Ok(out)
@@ -138,6 +183,7 @@ mod tests {
         assert_eq!(got.len(), 2);
         assert_eq!(got[0].name, "shkia");
         assert_eq!(got[1].name, "tzeis_72_minutes");
+        assert!(matches!(got[0].source, ZmanSource::Builtin(_)));
     }
 
     #[test]
@@ -150,10 +196,49 @@ mod tests {
     }
 
     #[test]
-    fn colon_is_reserved() {
+    fn custom_specs_resolve_alongside_builtins() {
         let cfg = Config::default();
-        let e = resolve_zmanim(&["alos:18.5deg".into()], &cfg).unwrap_err();
-        assert!(e.to_string().contains("not supported yet"));
+        let got = resolve_zmanim(
+            &["shkia".into(), "Alos:18.5deg".into(), "tzeis:72min".into()],
+            &cfg,
+        )
+        .unwrap();
+        assert_eq!(got.len(), 3);
+        assert!(matches!(got[0].source, ZmanSource::Builtin(_)));
+        // Label is the normalized spec, so `Alos` prints as `alos`.
+        assert_eq!(got[1].name, "alos:18.5deg");
+        assert!(matches!(got[1].source, ZmanSource::Custom(_)));
+        assert_eq!(got[2].name, "tzeis:72min");
+    }
+
+    #[test]
+    fn custom_specs_dedupe_after_normalizing() {
+        let cfg = Config::default();
+        let got = resolve_zmanim(
+            &["TZEIS:72MIN".into(), "tzeis:72min".into(), "shkia".into()],
+            &cfg,
+        )
+        .unwrap();
+        assert_eq!(got.len(), 2);
+        assert_eq!(got[0].name, "tzeis:72min");
+        assert_eq!(got[1].name, "shkia");
+    }
+
+    #[test]
+    fn normalize_spec_leaves_the_offset_half_alone() {
+        assert_eq!(
+            normalize_spec("Sof-Zman-Shema-MGA:16.1DEG"),
+            "sof_zman_shema_mga:16.1deg"
+        );
+        // A `-` in the offset is a minus sign, not a name separator.
+        assert_eq!(normalize_spec("alos:-5deg"), "alos:-5deg");
+    }
+
+    #[test]
+    fn bad_custom_spec_errors() {
+        let cfg = Config::default();
+        let e = resolve_zmanim(&["alos:18.5xyz".into()], &cfg).unwrap_err();
+        assert!(e.to_string().contains("unrecognized offset"));
     }
 
     #[test]

@@ -12,17 +12,20 @@ EXAMPLES:
   # Compute zmanim for raw coordinates, today
   zmanim shkia tzeis_72_minutes --lat 31.778 --lon 35.235 --tz Asia/Jerusalem
 
+  # Save a location
+  zmanim locations add home --lat 31.778 --lon 35.235 --tz Asia/Jerusalem
+
   # Use a saved location and a date range
   zmanim sof_zman_shema_gra shkia --location home --date 2026-07-14..2026-07-20
 
   # Default zman set (from config), as JSON, next 7 days
   zmanim --location home --days 7 --format json
 
-  # Discover zman names
+  # Search zman names
   zmanim list geonim
 
-  # Save a location
-  zmanim locations add home --lat 31.778 --lon 35.235 --tz Asia/Jerusalem
+  # Custom offsets: 18.5 degrees for alos, 70 clock minutes for tzeis
+  zmanim alos:18.5deg tzeis:70min --location home
 ";
 
 /// A command-line tool for computing Jewish *zmanim*.
@@ -66,6 +69,15 @@ pub enum Command {
 pub struct ComputeArgs {
     /// Zmanim to compute, by name (see `zmanim list`). Hyphens and underscores
     /// are interchangeable. If omitted, a default set from config is used.
+    ///
+    /// A custom offset can be given as `<base>:<value><unit>`, e.g.
+    /// `alos:18.5deg`, `shaah_zmanis_mga:80min`, `tzeis:100minz`. Units are
+    /// `deg` (degrees below the horizon), `min` (clock minutes) and `minz`
+    /// (minutes zmaniyos). A negative value flips the direction, so
+    /// `alos:-72min` is 72 minutes after sunrise. Bases: alos, tzeis,
+    /// shaah_zmanis_mga, sof_zman_shema_mga, sof_zman_tefila_mga,
+    /// sof_zman_biur_chametz_mga, mincha_gedola_mga,
+    /// samuch_lemincha_ketana_mga, mincha_ketana_mga, plag_mga.
     #[arg(
         value_name = "ZMAN",
         value_parser = ZmanNameParser,

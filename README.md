@@ -40,6 +40,37 @@ With no zman names given, a default set is used: *hanetz*, *sof zman shema*
 GRA, *chatzos hayom*, *mincha gedola* GRA, *shkia*, and *tzeis geonim* 8.5°.
 Override it with the `zmanim` key in the config file.
 
+### Custom offsets
+
+A *zman* that isn't in the built-in list can be spelled out directly as
+`<base>:<value><unit>`:
+
+```sh
+zmanim alos:18.5deg shaah_zmanis_mga:80min tzeis:100minz
+```
+
+| Unit | Meaning |
+| --- | --- |
+| `deg` | Degrees below the horizon |
+| `min` | Fixed clock minutes before/after sunrise/sunset |
+| `minz` | Minutes *zmaniyos*, each 1/60 of the GRA (sunrise-to-sunset) *shaah zmanis* |
+
+A negative value flips the direction: `alos:-72min` is 72 minutes *after*
+sunrise, and `alos:-5deg` puts the sun 5° *above* the horizon rather than below
+it. Degrees must be between -90 and 90.
+
+The base is one of the ten *zman* families that take an offset: `alos`,
+`tzeis`, `shaah_zmanis_mga`, `sof_zman_shema_mga`, `sof_zman_tefila_mga`,
+`sof_zman_biur_chametz_mga`, `mincha_gedola_mga`, `samuch_lemincha_ketana_mga`,
+`mincha_ketana_mga`, and `plag_mga`. For the `*_mga` families the offset
+defines both ends of the day, exactly as it does for the built-in names — so
+`tzeis:72min` is the same *zman* as `tzeis_72_minutes`, and
+`sof_zman_shema_mga:16.1deg` the same as `sof_zman_shema_mga_16_1_degrees`.
+
+The spec is used verbatim as the column header, JSON key, or CSV field name.
+Custom offsets work in the config file's `zmanim` list too, but shell
+completion only knows the built-in names.
+
 ### Location
 
 Provide raw coordinates, or save a named location and reuse it:
@@ -115,9 +146,9 @@ Commands:
 
 Arguments:
   [ZMAN]...
-          Zmanim to compute, by name (see `zmanim list`). Hyphens and
-          underscores are interchangeable. If omitted, a default set from config
-          is used
+          Zmanim to compute, by name (see `zmanim list`). Hyphens and underscores are interchangeable. If omitted, a default set from config is used.
+          
+          A custom offset can be given as `<base>:<value><unit>`, e.g. `alos:18.5deg`, `shaah_zmanis_mga:80min`, `tzeis:100minz`. Units are `deg` (degrees below the horizon), `min` (clock minutes) and `minz` (minutes zmaniyos). A negative value flips the direction, so `alos:-72min` is 72 minutes after sunrise. Bases: alos, tzeis, shaah_zmanis_mga, sof_zman_shema_mga, sof_zman_tefila_mga, sof_zman_biur_chametz_mga, mincha_gedola_mga, samuch_lemincha_ketana_mga, mincha_ketana_mga, plag_mga.
 
 Options:
   -L, --location <NAME>
@@ -135,8 +166,7 @@ Options:
           Elevation in meters (default 0)
 
       --tz <TZ>
-          IANA timezone (e.g. Asia/Jerusalem). Defaults to the location's saved
-          timezone, or the system timezone for raw coordinates
+          IANA timezone (e.g. Asia/Jerusalem). Defaults to the location's saved timezone, or the system timezone for raw coordinates
 
           [env: ZMANIM_TZ=]
 
@@ -144,8 +174,7 @@ Options:
           Date, `today`, `tomorrow`, or an inclusive range `START..END`
 
       --days <N>
-          Number of consecutive days starting from --date (or today). Cannot be
-          combined with a `START..END` range
+          Number of consecutive days starting from --date (or today). Cannot be combined with a `START..END` range
 
       --use-elevation <MODE>
           Elevation policy for the calculations
@@ -188,13 +217,11 @@ Options:
           [env: ZMANIM_ROUND=]
 
       --time-style <STYLE>
-          Time rendering: `auto` (human for table/csv, ISO for json), or force
-          `human`/`iso` in any format
+          Time rendering: `auto` (human for table/csv, ISO for json), or force `human`/`iso` in any format
 
           Possible values:
           - auto:  Human clock times for table/csv, full-precision ISO for json
-          - human: Human-readable clock times/durations (honors precision and
-            round)
+          - human: Human-readable clock times/durations (honors precision and round)
           - iso:   Full-precision ISO 8601 (RFC-3339 times, `PT..` durations)
 
           [env: ZMANIM_TIME_STYLE=]
@@ -209,17 +236,20 @@ EXAMPLES:
   # Compute zmanim for raw coordinates, today
   zmanim shkia tzeis_72_minutes --lat 31.778 --lon 35.235 --tz Asia/Jerusalem
 
+  # Save a location
+  zmanim locations add home --lat 31.778 --lon 35.235 --tz Asia/Jerusalem
+
   # Use a saved location and a date range
   zmanim sof_zman_shema_gra shkia --location home --date 2026-07-14..2026-07-20
 
   # Default zman set (from config), as JSON, next 7 days
   zmanim --location home --days 7 --format json
 
-  # Discover zman names
+  # Search zman names
   zmanim list geonim
 
-  # Save a location
-  zmanim locations add home --lat 31.778 --lon 35.235 --tz Asia/Jerusalem
+  # Custom offsets: 18.5 degrees for alos, 70 clock minutes for tzeis
+  zmanim alos:18.5deg tzeis:70min --location home
 ```
 
 </details>
