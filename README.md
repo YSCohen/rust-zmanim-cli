@@ -49,10 +49,10 @@ A *zman* that isn't in the built-in list can be spelled out directly as
 zmanim alos:18.5deg shaah_zmanis_mga:80min tzeis:100minz
 ```
 
-| Unit | Meaning |
-| --- | --- |
-| `deg` | Degrees below the horizon |
-| `min` | Fixed clock minutes before/after sunrise/sunset |
+| Unit   | Meaning                                                                     |
+| ------ | --------------------------------------------------------------------------- |
+| `deg`  | Degrees below the horizon                                                   |
+| `min`  | Fixed clock minutes before/after sunrise/sunset                             |
 | `minz` | Minutes *zmaniyos*, each 1/60 of the GRA (sunrise-to-sunset) *shaah zmanis* |
 
 A negative value flips the direction: `alos:-72min` is 72 minutes *after*
@@ -63,7 +63,7 @@ The base is one of the ten *zman* families that take an offset: `alos`,
 `tzeis`, `shaah_zmanis_mga`, `sof_zman_shema_mga`, `sof_zman_tefila_mga`,
 `sof_zman_biur_chametz_mga`, `mincha_gedola_mga`, `samuch_lemincha_ketana_mga`,
 `mincha_ketana_mga`, and `plag_mga`. For the `*_mga` families the offset
-defines both ends of the day, exactly as it does for the built-in names — so
+defines both ends of the day, exactly as it does for the built-in names. So
 `tzeis:72min` is the same *zman* as `tzeis_72_minutes`, and
 `sof_zman_shema_mga:16.1deg` the same as `sof_zman_shema_mga_16_1_degrees`.
 
@@ -95,13 +95,13 @@ zmanim shkia --location home --elevation 0
 `--elevation` (meters, default 0) only matters if you also opt in to using it.
 `--use-elevation` controls that:
 
-| Mode | Effect |
-| --- | --- |
-| `no` (default) | Ignore elevation entirely |
+| Mode           | Effect                             |
+| -------------- | ---------------------------------- |
+| `no` (default) | Ignore elevation entirely          |
 | `hanetz-shkia` | Use it for sunrise and sunset only |
-| `all` | Use it for every *zman* |
+| `all`          | Use it for every *zman*            |
 
-This visibly moves times — at 754 m in Jerusalem, `--use-elevation all` puts
+This visibly moves times: at 754 m in Jerusalem, `--use-elevation all` puts
 *shkia* about 4½ minutes later than `no`. Set a per-location policy with
 `use_elevation` in the config so you don't have to pass the flag each time.
 
@@ -120,11 +120,11 @@ zmanim shkia --date 2026-07-14 --days 7        # 7 consecutive days
 `--format` takes `table` (the default), `csv`, or `json`. Times display to the
 minute; `--precision m|s|ms` and `--round nearest|down|up` change that.
 
-`--time-style` picks how times are written: `auto` (the default — clock times
-for table and CSV, full-precision RFC-3339 for JSON), or `human`/`iso` to force
-one of them in any format.
+`--time-style` picks how times are written: `auto` (the default: clock times for
+table and CSV, full-precision RFC-3339 for JSON), or `human`/`iso` to force one
+of them in any format.
 
-Missing zmanim — such as a *hanetz* that never happens above the Arctic Circle —
+Missing zmanim, such as a *hanetz* that never happens above the Arctic Circle,
 render as `-` in table, an empty field in CSV, and `null` in JSON.
 
 ## Command reference
@@ -349,18 +349,18 @@ Unknown keys are rejected rather than ignored, so a typo fails loudly.
 
 Each takes the same values as the flag it shadows:
 
-| Variable | Flag |
-| --- | --- |
-| `ZMANIM_LOCATION` | `--location` |
-| `ZMANIM_TZ` | `--tz` |
+| Variable               | Flag              |
+| ---------------------- | ----------------- |
+| `ZMANIM_LOCATION`      | `--location`      |
+| `ZMANIM_TZ`            | `--tz`            |
 | `ZMANIM_USE_ELEVATION` | `--use-elevation` |
-| `ZMANIM_FORMAT` | `--format` |
-| `ZMANIM_PRECISION` | `--precision` |
-| `ZMANIM_ROUND` | `--round` |
-| `ZMANIM_TIME_STYLE` | `--time-style` |
+| `ZMANIM_FORMAT`        | `--format`        |
+| `ZMANIM_PRECISION`     | `--precision`     |
+| `ZMANIM_ROUND`         | `--round`         |
+| `ZMANIM_TIME_STYLE`    | `--time-style`    |
 
 `--lat`, `--lon`, `--elevation`, `--date`, and `--days` have no environment
-variable — pass them as flags.
+variable. Pass them as flags.
 
 ## Shell completions
 
